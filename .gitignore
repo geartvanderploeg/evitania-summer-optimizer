@@ -1,0 +1,44 @@
+# Claude Code
+.claude/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Node
+node_modules/
+
+# Local artifacts
+*.png
+py_results.json
+validate_js.mjs
+event-information.md
+
+# Secrets / env
+.env
+.env.*
+*.env
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.code-workspace
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db

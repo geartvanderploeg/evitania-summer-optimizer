@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Summer Optimizer</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.plot.ly/plotly-basic-2.35.2.min.js" charset="utf-8"></script>
+  <script src="optimizer.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Summer Optimizer</h1>
+    <p>For each coin amount, what's the upgrade distribution that maximises drops from ghosts?</p>
+  </header>
+
+  <section id="input">
+    <label for="budget">Coins available:</label>
+    <input type="number" id="budget" min="0" step="1" value="800">
+  </section>
+
+  <section id="error" class="hidden"></section>
+
+  <section id="results" class="hidden">
+    <h2>Optimal configuration</h2>
+    <table id="optimal-table">
+      <thead><tr><th>Upgrade</th><th>Level</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <p id="cost-line"></p>
+    <p id="ratio-line"></p>
+
+    <h2>Next improvement</h2>
+    <div id="next-block"></div>
+  </section>
+
+  <section id="plot-section" class="hidden">
+    <div id="plot"></div>
+  </section>
+
+  <footer>
+    <p>Source: <a href="https://github.com/geartvanderploeg/evitania-summer-optimizer">github.com/geartvanderploeg/evitania-summer-optimizer</a></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

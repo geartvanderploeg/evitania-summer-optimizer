@@ -1,0 +1,89 @@
+{
+    "More-Ghosts" : {
+        "Description" : "Increases ghosts spawn chance per kill by +3x%. Ghosts can drop Summer Coins and Rewind Buff (decreases your cooldowns each kill)",
+        "max-level" : 20,
+        "cost-per-level" : [
+            20,
+            21,
+            23,
+            24,
+            25,
+            26,
+            27,
+            29,
+            30,
+            32,
+            33,
+            35,
+            36,
+            38,
+            40,
+            42,
+            44,
+            46,
+            49,
+            51
+        ]
+    },
+    "Even-More-Ghosts" : {
+        "Description" : "Increases ghosts per spawn by +1x",
+        "max-level" : 3,
+        "cost-per-level" : [
+            100,
+            200,
+            400
+        ]
+    },
+    "More-Drops": {
+        "Description" : "Increases amount of drops from Ghosts by +5x%. Affects summer coins, rewind buff and rare loot from original monster",
+        "max-level" : 20,
+        "cost-per-level" : [
+            20,
+            21,
+            23,
+            24,
+            25,
+            26,
+            27,
+            29,
+            30,
+            32,
+            33,
+            35,
+            36,
+            38,
+            40,
+            42,
+            44,
+            46,
+            49,
+            51
+        ]
+    },
+    "More-Elites" : {
+        "Description" : "Increases world-elite spawn chance per kill by +3x%",
+        "max-level" : 20,
+        "cost-per-level" : [
+            20,
+            21,
+            23,
+            24,
+            25,
+            26,
+            27,
+            29,
+            30,
+            32,
+            33,
+            35,
+            36,
+            38,
+            40,
+            42,
+            44,
+            46,
+            49,
+            51
+        ]
+    }
+}
