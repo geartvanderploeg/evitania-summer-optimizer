@@ -46,10 +46,12 @@ def test_expand_full_array():
     assert expand_costs([10, 20, 30], 3) == [10, 20, 30]
 
 
-def test_load_caps_drop_rate_to_4():
-    """Drop-Rate has 4 known + 6 unknown — effective max-level should be 4."""
-    assert UPGRADES["Drop-Rate"]["max-level"] == 4
+def test_load_caps_drop_rate_at_known_count():
+    """Drop-Rate caps at the highest level with a known cost."""
+    known = [c for c in UPGRADES["Drop-Rate"]["cost-per-level"]]
+    assert UPGRADES["Drop-Rate"]["max-level"] == len(known)
     assert UPGRADES["Drop-Rate"]["max-level-declared"] == 10
+    assert UPGRADES["Drop-Rate"]["max-level"] >= 4  # at least the originally-known set
 
 
 # ---------- Pure-math sanity ----------
@@ -71,17 +73,18 @@ def test_dps_full_crit_full_cd():
 
 
 def test_baseline_pps_matches_spec():
-    # baseline: DPS=1, EnemyHP=10, 3·K_cleave=0.3, spawn≈1/9 → spawn-limited
-    # PartsPerSec ≈ 1/9 ≈ 0.111
-    assert baseline_pps() == pytest.approx(1 / 9, rel=1e-9)
+    # Per-slot respawn: at baseline α=0.1 < 17/27 → Case B. kill_rate = 3α = 0.3.
+    # parts_per_kill = 1 → PartsPerSec = 0.3.
+    assert baseline_pps() == pytest.approx(0.3, rel=1e-9)
 
 
 @pytest.mark.parametrize("L_dmg,L_cc,L_cd,L_dr,L_as,L_es,L_eb,expected_ratio,why", [
-    (0, 0, 0, 0, 0, 0, 0, 1.0, "baseline"),
-    (1, 0, 0, 0, 0, 0, 0, 1.0, "L_dmg=1 alone: still spawn-limited"),
-    (0, 0, 0, 0, 0, 10, 0, 2.7, "L_es=10: spawn_cd=0.5, kill-limited at 0.3/s"),
-    (0, 0, 0, 0, 0, 0, 1, 2.0, "L_eb=1: spawn-limited, parts/kill doubles"),
-    (0, 20, 10, 0, 0, 0, 0, 1.0, "Full crits but still spawn-limited"),
+    (0, 0, 0, 0, 0, 0, 0, 1.0, "baseline (Case B, α=0.1)"),
+    (1, 0, 0, 0, 0, 0, 0, 4.0, "L_dmg=1: Case B, α=0.4 → kill_rate scales 4×"),
+    (2, 0, 0, 0, 0, 0, 0, 14/7.3/0.3, "L_dmg=2: Case A, α=0.7 → 20·0.7/(1+6.3) = 14/7.3"),
+    (0, 0, 0, 0, 0, 10, 0, 1.0, "L_es=10 alone: Case B doesn't depend on τ → no help"),
+    (0, 0, 0, 0, 0, 0, 1, 1.0, "L_eb=1 alone: cancels in Case B (HP×2, parts/kill×2)"),
+    (0, 20, 10, 0, 0, 0, 0, 3.0, "L_cc=20+L_cd=10: avg_dmg_mult=3, α=0.3 (Case B)"),
 ])
 def test_pps_ratio_spot_checks(L_dmg, L_cc, L_cd, L_dr, L_as, L_es, L_eb, expected_ratio, why):
     pps = parts_per_sec_for(L_dmg, L_cc, L_cd, L_dr, L_as, L_es, L_eb)

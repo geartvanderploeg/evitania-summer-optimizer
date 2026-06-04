@@ -2,7 +2,29 @@
 
 Objective: maximize Card Parts per second (UI displays per-minute = 60 × pps).
 
-Model (cleave × 3, crit base 1.5):
+Spawn model: **per-slot respawn**. The map has 20 spawn slots; when an enemy
+dies, its slot enters a `spawn_cd`-second cooldown before respawning.
+Effective spawn rate at any time is `N_dead / spawn_cd`, not `1/spawn_cd`.
+
+Combat: cleave hits up to 3 enemies per attack. Per-target kill rate
+α = DPS / EnemyHP. Assumes map starts full (N_alive = 20).
+
+Steady-state derivation. Let τ = spawn_cd. Set spawn_rate = kill_rate:
+  (20 - N_alive) / τ = α · min(N_alive, 3)
+- **Case B** (α < 17/(3τ), low-DPS): cleave stays saturated. N_alive = 20 - 3ατ > 3.
+  kill_rate = 3α (independent of τ).
+- **Case A** (α ≥ 17/(3τ), high-DPS): cleave de-saturates. N_alive = 20/(1+ατ) ≤ 3.
+  kill_rate = 20α / (1 + ατ); asymptotes to 20/τ.
+
+The boundary is continuous: both branches give 17/τ at α = 17/(3τ).
+
+PartsPerSec = kill_rate · (1 + 0.10·L_dr) · (1 + L_eb)
+
+In Case B, L_eb cancels (HP doubles, parts/kill doubles → net zero) and L_es is
+irrelevant (τ doesn't appear). L_eb and L_es only help once DPS pushes α past
+the Case A threshold.
+
+Other model parameters (crit base 1.5):
     Damage         = 1 + 3·L_dmg
     AttackSpeed    = 1 + 0.07·L_as
     crit_chance    = min(1, 0.05·L_cc)
@@ -10,17 +32,12 @@ Model (cleave × 3, crit base 1.5):
     avg_dmg_mult   = (1 - cc) + cc · crit_mult
     DPS            = Damage · AttackSpeed · avg_dmg_mult
     EnemyHP        = 10 · (1 + L_eb)
-    parts_per_kill = (1 + 0.10·L_dr) · (1 + L_eb)
     spawn_cd       = max(0.5, 9 · (1 - 0.10·L_es))
-    spawn_rate     = 1 / spawn_cd
-    K_eff          = min(3 · DPS / EnemyHP, spawn_rate)
-    PartsPerSec    = K_eff · parts_per_kill
 
 Search space (~1.5B) is solved by decomposition:
   inner: (L_dmg, L_cc, L_cd, L_as) → DPS Pareto frontier
   outer: (L_dr, L_es, L_eb) discrete enumeration
-  combine: cross-product of outer × inner frontier (~few-hundred-thousand candidates),
-           then sweep to build the staircase.
+  combine: cross-product of outer × inner frontier, then staircase sweep.
 
 Movespeed is excluded — no contribution to parts/sec in this model.
 """
@@ -150,6 +167,18 @@ def dps(L_dmg: int, L_cc: int, L_cd: int, L_as: int) -> float:
     return damage * attack_speed * avg
 
 
+def steady_state_kill_rate(alpha: float, spawn_cd: float) -> float:
+    """Per-slot respawn steady state with cleave×3, map-starts-full.
+    Case B (α < 17/(3τ)): kill_rate = 3α.  Case A: kill_rate = 20α/(1+ατ).
+    """
+    if alpha <= 0 or spawn_cd <= 0:
+        return 0.0
+    threshold = 17.0 / (3 * spawn_cd)
+    if alpha < threshold:
+        return 3 * alpha
+    return 20 * alpha / (1 + alpha * spawn_cd)
+
+
 def parts_per_sec_for(
     L_dmg: int, L_cc: int, L_cd: int, L_dr: int, L_as: int, L_es: int, L_eb: int
 ) -> float:
@@ -157,9 +186,8 @@ def parts_per_sec_for(
     enemy_hp = 10.0 * (1 + L_eb)
     parts_per_kill = (1 + 0.10 * L_dr) * (1 + L_eb)
     spawn_cd = max(0.5, 9.0 * (1 - 0.10 * L_es))
-    spawn_rate = 1.0 / spawn_cd
-    k_eff = min(3 * dps(L_dmg, L_cc, L_cd, L_as) / enemy_hp, spawn_rate)
-    return k_eff * parts_per_kill
+    alpha = dps(L_dmg, L_cc, L_cd, L_as) / enemy_hp
+    return steady_state_kill_rate(alpha, spawn_cd) * parts_per_kill
 
 
 def baseline_pps() -> float:
@@ -198,7 +226,7 @@ def _dps_frontier(inner_iter) -> list[tuple[int, float, tuple]]:
 
 
 def _enumerate_outer(upgrades: dict):
-    """Yield (cost_outer, spawn_rate, parts_factor, hp_factor, (L_dr, L_es, L_eb))."""
+    """Yield (cost_outer, spawn_cd, parts_factor, hp_factor, (L_dr, L_es, L_eb))."""
     dr_cum = upgrades["Drop-Rate"]["cumulative-cost"]
     es_cum = upgrades["Enemy-Spawn"]["cumulative-cost"]
     eb_cum = upgrades["Enemy-Buff"]["cumulative-cost"]
@@ -210,21 +238,21 @@ def _enumerate_outer(upgrades: dict):
     ):
         cost = dr_cum[L_dr] + es_cum[L_es] + eb_cum[L_eb]
         spawn_cd = max(0.5, 9.0 * (1 - 0.10 * L_es))
-        spawn_rate = 1.0 / spawn_cd
         parts_factor = (1 + 0.10 * L_dr) * (1 + L_eb)
         hp_factor = 1 + L_eb
-        yield cost, spawn_rate, parts_factor, hp_factor, (L_dr, L_es, L_eb)
+        yield cost, spawn_cd, parts_factor, hp_factor, (L_dr, L_es, L_eb)
 
 
 def _all_candidates(upgrades: dict) -> list[Config]:
     """Cross-product of outer × inner DPS frontier — every Pareto-optimal candidate."""
     inner_front = _dps_frontier(_enumerate_inner(upgrades))
     candidates: list[Config] = []
-    for cost_o, spawn_rate, parts_factor, hp_factor, outer_cfg in _enumerate_outer(upgrades):
+    for cost_o, spawn_cd, parts_factor, hp_factor, outer_cfg in _enumerate_outer(upgrades):
         L_dr, L_es, L_eb = outer_cfg
         for cost_i, dps_val, inner_cfg in inner_front:
             L_dmg, L_cc, L_cd, L_as = inner_cfg
-            k_eff = min(3 * dps_val / (10 * hp_factor), spawn_rate)
+            alpha = dps_val / (10 * hp_factor)
+            k_eff = steady_state_kill_rate(alpha, spawn_cd)
             pps = k_eff * parts_factor
             candidates.append(Config(
                 L_dmg=L_dmg, L_cc=L_cc, L_cd=L_cd, L_dr=L_dr,

@@ -78,13 +78,21 @@ function dps(L_dmg, L_cc, L_cd, L_as) {
   return damage * attackSpeed * avg;
 }
 
+function steadyStateKillRate(alpha, spawnCd) {
+  // Per-slot respawn, cleave×3, map-starts-full.
+  // Case B (α < 17/(3τ)): kill_rate = 3α.  Case A: kill_rate = 20α/(1+ατ).
+  if (alpha <= 0 || spawnCd <= 0) return 0;
+  const threshold = 17 / (3 * spawnCd);
+  if (alpha < threshold) return 3 * alpha;
+  return 20 * alpha / (1 + alpha * spawnCd);
+}
+
 function partsPerSecFor(L_dmg, L_cc, L_cd, L_dr, L_as, L_es, L_eb) {
   const enemyHP = 10 * (1 + L_eb);
   const ppk = (1 + 0.10 * L_dr) * (1 + L_eb);
   const spawnCd = Math.max(0.5, 9 * (1 - 0.10 * L_es));
-  const spawnRate = 1 / spawnCd;
-  const kEff = Math.min(3 * dps(L_dmg, L_cc, L_cd, L_as) / enemyHP, spawnRate);
-  return kEff * ppk;
+  const alpha = dps(L_dmg, L_cc, L_cd, L_as) / enemyHP;
+  return steadyStateKillRate(alpha, spawnCd) * ppk;
 }
 
 function baselinePps() {
@@ -137,11 +145,11 @@ function allCandidates(upgrades) {
       for (let L_eb = 0; L_eb <= ebMax; L_eb++) {
         const costO = drCum[L_dr] + esCum[L_es] + ebCum[L_eb];
         const spawnCd = Math.max(0.5, 9 * (1 - 0.10 * L_es));
-        const spawnRate = 1 / spawnCd;
         const partsFactor = (1 + 0.10 * L_dr) * (1 + L_eb);
         const hpFactor = 1 + L_eb;
         for (const [costI, d, L_dmg, L_cc, L_cd, L_as] of front) {
-          const kEff = Math.min(3 * d / (10 * hpFactor), spawnRate);
+          const alpha = d / (10 * hpFactor);
+          const kEff = steadyStateKillRate(alpha, spawnCd);
           const pps = kEff * partsFactor;
           out.push({
             L_dmg, L_cc, L_cd, L_dr, L_as, L_es, L_eb,
@@ -192,7 +200,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     INNER_KEYS, OUTER_KEYS, RELEVANT_KEYS,
     expandCosts, evaluateFormula, cumulativeCosts, loadUpgrades,
-    dps, partsPerSecFor, baselinePps,
+    dps, steadyStateKillRate, partsPerSecFor, baselinePps,
     dpsFrontier, allCandidates, optimalRatioStaircase, optimize,
   };
 }
