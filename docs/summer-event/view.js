@@ -1,6 +1,4 @@
-// UI glue: load upgrades.json, run optimize() on input change, render results + plot.
-
-const GLOBAL_MAX_COST_UI = 2042;
+// Summer event UI: load data.json, run optimize() on input, render results + plot.
 
 let upgrades = null;
 let staircase = null;
@@ -32,7 +30,7 @@ function renderResults(result, budget) {
   }
 
   const unspent = budget - opt.cost;
-  const overBudget = budget > GLOBAL_MAX_COST_UI ? " (budget exceeds 2042)" : "";
+  const overBudget = budget > GLOBAL_MAX_COST ? " (budget exceeds 2042)" : "";
   $("cost-line").textContent = `Cost: ${opt.cost} coins (${unspent} unspent of ${budget})${overBudget}`;
   const pct = formatPct(opt.ratioNum);
   const bonus = formatPct(opt.ratioNum - 2000);
@@ -75,11 +73,11 @@ function renderResults(result, budget) {
 }
 
 function renderPlot(result, budget) {
-  const xs = staircase.map(c => c.cost).concat([GLOBAL_MAX_COST_UI]);
+  const xs = staircase.map(c => c.cost).concat([GLOBAL_MAX_COST]);
   const ys = staircase.map(c => c.ratioNum / 20).concat([staircase[staircase.length - 1].ratioNum / 20]);
 
   const opt = result.optimum;
-  const budgetX = Math.min(budget, GLOBAL_MAX_COST_UI);
+  const budgetX = Math.min(budget, GLOBAL_MAX_COST);
 
   const traces = [
     {
@@ -111,7 +109,7 @@ function renderPlot(result, budget) {
 
   const layout = {
     title: `Optimal drops vs. coin budget — ${budget} coins → ${formatPct(opt.ratioNum)}`,
-    xaxis: { title: "Coins available", range: [0, GLOBAL_MAX_COST_UI], gridcolor: "#eee" },
+    xaxis: { title: "Coins available", range: [0, GLOBAL_MAX_COST], gridcolor: "#eee" },
     yaxis: { title: "Drops (% of baseline)", range: [95, 600], gridcolor: "#eee" },
     shapes: [{
       type: "line",
@@ -136,11 +134,11 @@ function compute() {
 
 async function init() {
   try {
-    const resp = await fetch("upgrades.json");
+    const resp = await fetch("data.json");
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     upgrades = await resp.json();
   } catch (err) {
-    showError(`Could not load upgrades.json — try refreshing. (${err.message})`);
+    showError(`Could not load data.json — try refreshing. (${err.message})`);
     return;
   }
   staircase = optimalRatioStaircase(enumerateConfigs(upgrades));
@@ -148,4 +146,8 @@ async function init() {
   compute();
 }
 
-init();
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}

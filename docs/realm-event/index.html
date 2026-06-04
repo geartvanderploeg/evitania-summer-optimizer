@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Realm event — Evitania Optimizer</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.plot.ly/plotly-basic-2.35.2.min.js" charset="utf-8"></script>
+  <script src="../shared/menu.js" defer></script>
+  <script src="optimizer.js" defer></script>
+  <script src="view.js" defer></script>
+</head>
+<body>
+  <div class="topbar">
+    <button class="menu-button" aria-haspopup="true" aria-expanded="false">▾ Menu</button>
+    <nav class="menu-panel" aria-label="Events">
+      <a href="../">Home</a>
+      <hr>
+      <a href="../summer-event/">Summer event</a>
+      <hr>
+      <a href="./">Realm event</a>
+    </nav>
+  </div>
+
+  <header>
+    <h1>Realm event</h1>
+    <p>For each Card Parts amount, what's the upgrade distribution that maximises Card Parts gained per run?</p>
+  </header>
+
+  <section id="input">
+    <label for="budget">Card Parts available:</label>
+    <input type="number" id="budget" min="0" step="1" value="500">
+  </section>
+
+  <section id="error" class="hidden"></section>
+
+  <section id="results" class="hidden">
+    <h2>Optimal configuration</h2>
+    <div id="optimal-block"></div>
+    <p id="cost-line"></p>
+    <p id="ratio-line"></p>
+
+    <h2>Next improvement</h2>
+    <div id="next-block"></div>
+  </section>
+
+  <section id="plot-section" class="hidden">
+    <div id="plot"></div>
+  </section>
+
+  <footer>
+    <p>Source: <a href="https://github.com/geartvanderploeg/evitania">github.com/geartvanderploeg/evitania</a></p>
+  </footer>
+</body>
+</html>

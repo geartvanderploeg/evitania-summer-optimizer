@@ -24,8 +24,11 @@ node_modules/
 # Local artifacts
 *.png
 py_results.json
+py_realm.json
 validate_js.mjs
+validate_realm.mjs
 event-information.md
+implementation_idea.md
 
 # Secrets / env
 .env

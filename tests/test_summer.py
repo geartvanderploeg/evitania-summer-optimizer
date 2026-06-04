@@ -7,8 +7,7 @@ from pathlib import Path
 
 import pytest
 
-import optimizer
-from optimizer import (
+from optimizers.summer import (
     Config,
     cumulative_costs,
     enumerate_configs,
@@ -19,8 +18,8 @@ from optimizer import (
 )
 
 
-HERE = Path(__file__).parent
-UPGRADES = load_upgrades(HERE / "docs" / "upgrades.json")
+REPO_ROOT = Path(__file__).parent.parent
+UPGRADES = load_upgrades(REPO_ROOT / "docs" / "summer-event" / "data.json")
 
 
 # ---------- Pure-math sanity checks against the spec example ----------

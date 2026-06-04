@@ -3,45 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Summer Optimizer</title>
+  <title>Evitania Optimizer</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.plot.ly/plotly-basic-2.35.2.min.js" charset="utf-8"></script>
-  <script src="optimizer.js"></script>
+  <script src="shared/menu.js" defer></script>
 </head>
 <body>
+  <div class="topbar">
+    <button class="menu-button" aria-haspopup="true" aria-expanded="false">▾ Menu</button>
+    <nav class="menu-panel" aria-label="Events">
+      <a href="./">Home</a>
+      <hr>
+      <a href="summer-event/">Summer event</a>
+      <hr>
+      <a href="realm-event/">Realm event</a>
+    </nav>
+  </div>
+
   <header>
-    <h1>Summer Optimizer</h1>
-    <p>For each coin amount, what's the upgrade distribution that maximises drops from ghosts?</p>
+    <h1>Evitania Optimizer</h1>
+    <p>Pick an event below to optimise your upgrades for it.</p>
   </header>
 
-  <section id="input">
-    <label for="budget">Coins available:</label>
-    <input type="number" id="budget" min="0" step="1" value="800">
-  </section>
-
-  <section id="error" class="hidden"></section>
-
-  <section id="results" class="hidden">
-    <h2>Optimal configuration</h2>
-    <table id="optimal-table">
-      <thead><tr><th>Upgrade</th><th>Level</th></tr></thead>
-      <tbody></tbody>
-    </table>
-    <p id="cost-line"></p>
-    <p id="ratio-line"></p>
-
-    <h2>Next improvement</h2>
-    <div id="next-block"></div>
-  </section>
-
-  <section id="plot-section" class="hidden">
-    <div id="plot"></div>
-  </section>
+  <ul class="landing-list">
+    <li><a href="summer-event/">Summer event</a> — maximise drops from ghosts per kill.</li>
+    <li><a href="realm-event/">Realm event</a> — maximise Card Parts gained per run.</li>
+  </ul>
 
   <footer>
-    <p>Source: <a href="https://github.com/geartvanderploeg/evitania-summer-optimizer">github.com/geartvanderploeg/evitania-summer-optimizer</a></p>
+    <p>Source: <a href="https://github.com/geartvanderploeg/evitania">github.com/geartvanderploeg/evitania</a></p>
   </footer>
-
-  <script src="app.js"></script>
 </body>
 </html>

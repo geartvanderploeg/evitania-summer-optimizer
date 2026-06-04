@@ -1,0 +1,70 @@
+{
+    "Damage-dealt": {
+        "Description": "Increases Damage dealt by +3x",
+        "max-level": 50,
+        "cost-per-level": "14x",
+        "note": "The cost for level 1 is 14. So to get the cost for a level you set x to the level. This is the same for all upgrades in this file."
+    },
+    "Chance-to-Crit": {
+        "Description": "Increases Chance to Crit by 5x%",
+        "max-level": 20,
+        "cost-per-level": "10x + 5"
+    },
+    "Crit-Damage": {
+        "Description": "Increases Crit Damage by 15x%",
+        "max-level": 10,
+        "cost-per-level": "60x + 20"
+    },
+    "Drop-Rate": {
+        "Description": "Affects Card Parts +10x%",
+        "max-level": 10,
+        "cost-per-level": [
+            60,
+            84,
+            118,
+            165,
+            "?",
+            "?",
+            "?",
+            "?",
+            "?",
+            "?"
+        ]
+    },
+    "Attack-Speed": {
+        "Description": "Increases Attack Speed by 7x%",
+        "max-level": 20,
+        "cost-per-level": "20x + 10"
+    },
+    "Movespeed": {
+        "Description": "Increases Movespeed by 15x%",
+        "max-level": 20,
+        "cost-per-level": "40x + 20"
+    },
+    "Enemy-Spawn": {
+        "Description": "Decreases time between enemy spawns by -10x%",
+        "max-level": 10,
+        "cost-per-level": [
+            120,
+            193,
+            308,
+            "?",
+            "?",
+            "?",
+            "?",
+            "?",
+            "?",
+            "?"
+        ]
+    },
+    "Enemy-Buff": {
+        "Description": "Enemies have +100x% health and drop +100x% more Card Parts (upgrade currency). Leveling up increases enemies health and card part drops",
+        "max-level": 50,
+        "cost-per-level": [
+            80,
+            112,
+            157,
+            "? x 47"
+        ]
+    }
+}

@@ -15,7 +15,6 @@ More-Elites is intentionally excluded from the formula and the cost search
 
 from __future__ import annotations
 
-import argparse
 import itertools
 import json
 from dataclasses import dataclass
@@ -24,6 +23,7 @@ from typing import Iterable
 
 
 GHOST_UPGRADE_KEYS = ("More-Ghosts", "Even-More-Ghosts", "More-Drops")
+GLOBAL_MAX_COST = 2042  # sum of all per-level costs across the three ghost upgrades
 
 
 @dataclass(frozen=True)
@@ -52,7 +52,7 @@ def load_upgrades(path: Path) -> dict:
         data = json.load(f)
     for key in GHOST_UPGRADE_KEYS:
         if key not in data:
-            raise ValueError(f"upgrades.json missing required key: {key}")
+            raise ValueError(f"data.json missing required key: {key}")
         entry = data[key]
         if len(entry["cost-per-level"]) != entry["max-level"]:
             raise ValueError(
@@ -126,8 +126,6 @@ def optimal_ratio_staircase(configs: Iterable[Config]) -> list[Config]:
     """Sorted-by-cost configs whose ratio_num strictly exceeds the running max
     of all strictly-cheaper configs. At equal (cost, ratio_num), tiebreak by
     max secondary_num — matches optimize()'s precedence."""
-    # Sort by (cost asc, ratio_num desc, secondary_num desc) so within an equal
-    # cost we see the best ratio first and within equal ratio the best secondary.
     ordered = sorted(configs, key=lambda c: (c.cost, -c.ratio_num, -c.secondary_num))
     out: list[Config] = []
     best_ratio = -1
@@ -139,8 +137,7 @@ def optimal_ratio_staircase(configs: Iterable[Config]) -> list[Config]:
 
 
 def format_pct(ratio_num: int) -> str:
-    # ratio_num / 2000 as a percentage = ratio_num / 20. Show up to 2 decimals, trim trailing zeros.
-    pct_times_100 = ratio_num * 5  # ratio_num/20 * 100
+    pct_times_100 = ratio_num * 5
     whole, frac = divmod(pct_times_100, 100)
     if frac == 0:
         return f"{whole}%"
@@ -192,9 +189,6 @@ def render(result: Result, budget: int) -> str:
     return "\n".join(lines)
 
 
-GLOBAL_MAX_COST = 2042  # sum of all per-level costs across the three ghost upgrades
-
-
 def plot_curve(
     staircase: list[Config],
     result: Result,
@@ -214,9 +208,6 @@ def plot_curve(
         raise SystemExit(1)
 
     x_max = GLOBAL_MAX_COST
-
-    # Build step coordinates. Append a final point at x_max holding the last ratio
-    # so the staircase visibly extends to the right edge.
     xs = [c.cost for c in staircase] + [x_max]
     ys = [c.ratio_num / 20.0 for c in staircase] + [staircase[-1].ratio_num / 20.0]
 
@@ -258,40 +249,3 @@ def plot_curve(
     if show:
         plt.show()
     plt.close(fig)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="Summer event upgrade optimizer")
-    parser.add_argument("--budget", type=int, default=800, help="Coins available (default: 800)")
-    parser.add_argument(
-        "--upgrades",
-        type=Path,
-        default=Path(__file__).parent / "docs" / "upgrades.json",
-        help="Path to upgrades.json",
-    )
-    parser.add_argument("--plot", action="store_true", help="Also render a coin/drops staircase PNG")
-    parser.add_argument(
-        "--plot-out",
-        type=Path,
-        default=Path("optimization-curve.png"),
-        help="Output PNG path for --plot (default: optimization-curve.png in CWD)",
-    )
-    parser.add_argument(
-        "--show",
-        action="store_true",
-        help="With --plot, also display the chart interactively (blocks until closed)",
-    )
-    args = parser.parse_args()
-
-    upgrades = load_upgrades(args.upgrades)
-    result = optimize(upgrades, args.budget)
-    print(render(result, args.budget))
-
-    if args.plot:
-        staircase = optimal_ratio_staircase(enumerate_configs(upgrades))
-        plot_curve(staircase, result, args.budget, args.plot_out, args.show)
-        print(f"\nPlot saved to {args.plot_out}")
-
-
-if __name__ == "__main__":
-    main()
